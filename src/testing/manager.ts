@@ -1,7 +1,8 @@
 import path from "node:path";
 import * as vscode from "vscode";
-import { getXcodeBuildDestinationString } from "../build/commands.js";
-import { askXcodeWorkspacePath, getWorkspacePath } from "../build/utils.js";
+import { getXcodeBuildDestinationString } from "../build/runner.js";
+import { createExtensionBuildRuntimeContext } from "../build/runtime.js";
+import { askXcodeWorkspacePath, getWorkspacePath, prepareDerivedDataPath } from "../build/utils.js";
 import { getBuildSettingsToAskDestination } from "../common/cli/scripts.js";
 import type { ExtensionContext } from "../common/commands.js";
 import { errorReporting } from "../common/error-reporting.js";
@@ -360,6 +361,7 @@ export class TestingManager {
       configuration: configuration,
       sdk: undefined,
       xcworkspace: xcworkspace,
+      derivedDataPath: prepareDerivedDataPath(),
     });
     const destination = await askDestinationToTestOn(this.context, buildSettings);
     return {
@@ -394,7 +396,8 @@ export class TestingManager {
     xcworkspace: string;
   }) {
     this.context.updateProgressStatus("Building for testing");
-    const destinationRaw = getXcodeBuildDestinationString({ destination: options.destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = getXcodeBuildDestinationString(runtime, { destination: options.destination });
 
     // todo: add xcodebeautify command to format output
 
@@ -789,7 +792,8 @@ export class TestingManager {
       methodTests: [...classTest.children],
     });
 
-    const destinationRaw = getXcodeBuildDestinationString({ destination: options.destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = getXcodeBuildDestinationString(runtime, { destination: options.destination });
 
     // Some test items like SPM packages have a separate target for tests, in other case we use
     // the same target for all selected tests
@@ -880,7 +884,8 @@ export class TestingManager {
       throw new Error("Test target is not defined");
     }
 
-    const destinationRaw = getXcodeBuildDestinationString({ destination: options.destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = getXcodeBuildDestinationString(runtime, { destination: options.destination });
 
     // Run "xcodebuild" command as a task to see the test output
     await runTask(this.context, {

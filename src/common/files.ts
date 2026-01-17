@@ -1,8 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { promises as fs, type Dirent, type Stats } from "node:fs";
 import * as path from "node:path";
-import { getWorkspacePath, prepareStoragePath } from "../build/utils";
-import type { ExtensionContext } from "./commands";
 
 /**
  * Find files or directories in a given directory
@@ -86,22 +84,27 @@ export async function readJsonFile<T = unknown>(filePath: string): Promise<T> {
   return JSON.parse(rawString);
 }
 
-export function getWorkspaceRelativePath(filePath: string): string {
-  const workspacePath = getWorkspacePath();
+export function getWorkspaceRelativePath(filePath: string, workspacePath: string): string {
   return path.relative(workspacePath, filePath);
 }
 
 export async function tempFilePath(
-  context: ExtensionContext,
+  baseDirectory: string,
   options: {
     prefix: string;
   },
 ) {
-  // Where extension store some intermediate files
-  const storagePath = await prepareStoragePath(context);
+  return await tempFilePathInDirectory(baseDirectory, options);
+}
 
+export async function tempFilePathInDirectory(
+  baseDirectory: string,
+  options: {
+    prefix: string;
+  },
+) {
   // Directory for all temporary files
-  const tempPath = path.join(storagePath, "_temp");
+  const tempPath = path.join(baseDirectory, "_temp");
   await createDirectory(tempPath);
 
   // Generate random file name

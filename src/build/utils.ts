@@ -96,6 +96,7 @@ export async function askDestinationToRunOn(
     configuration: options.configuration,
     sdk: options.sdk,
     xcworkspace: options.xcworkspace,
+    derivedDataPath: prepareDerivedDataPath(),
   });
   const supportedPlatforms = buildSettings?.supportedPlatforms;
 
@@ -186,6 +187,7 @@ export async function askSchemeForBuild(
 
   const schemes = await getSchemes({
     xcworkspace: options.xcworkspace,
+    useWorkspaceParser: getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false,
   });
 
   const scheme = await showQuickPick({

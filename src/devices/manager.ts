@@ -2,6 +2,7 @@ import events from "node:events";
 import type { ExtensionContext } from "../common/commands";
 import { checkUnreachable } from "../common/types";
 import { listDevices } from "../common/xcode/devicectl";
+import { prepareStoragePath } from "../build/utils";
 import {
   type DeviceDestination,
   iOSDeviceDestination,
@@ -37,7 +38,8 @@ export class DevicesManager {
   }
 
   private async fetchDevices(): Promise<DeviceDestination[]> {
-    const output = await listDevices(this.context);
+    const storagePath = await prepareStoragePath(this.context);
+    const output = await listDevices(storagePath);
     return output.result.devices
       .map((device) => {
         const deviceType = device.hardwareProperties.deviceType;

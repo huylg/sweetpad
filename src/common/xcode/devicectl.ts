@@ -1,7 +1,9 @@
-import type { ExtensionContext } from "../commands";
 import { exec } from "../exec";
-import { readJsonFile, tempFilePath } from "../files";
-import { commonLogger } from "../logger";
+import { readJsonFile, tempFilePath, tempFilePathInDirectory } from "../files";
+
+const commonLogger = {
+  debug: (...args: unknown[]) => console.debug(...args),
+};
 
 type DeviceCtlListCommandOutput = {
   result: {
@@ -72,8 +74,22 @@ type DeviceCtlDeviceCapability = {
   featureIdentifier: string;
 };
 
-export async function listDevices(context: ExtensionContext): Promise<DeviceCtlListCommandOutput> {
-  await using tmpPath = await tempFilePath(context, {
+export async function listDevices(storagePath: string): Promise<DeviceCtlListCommandOutput> {
+  await using tmpPath = await tempFilePath(storagePath, {
+    prefix: "devices",
+  });
+
+  const devicesStdout = await exec({
+    command: "xcrun",
+    args: ["devicectl", "list", "devices", "--json-output", tmpPath.path, "--timeout", "10"],
+  });
+  commonLogger.debug("Stdout devicectl list devices", { stdout: devicesStdout });
+
+  return await readJsonFile<DeviceCtlListCommandOutput>(tmpPath.path);
+}
+
+export async function listDevicesInDirectory(baseDirectory: string): Promise<DeviceCtlListCommandOutput> {
+  await using tmpPath = await tempFilePathInDirectory(baseDirectory, {
     prefix: "devices",
   });
 
@@ -98,12 +114,12 @@ export type DeviceCtlProcess = {
 };
 
 export async function getRunningProcesses(
-  context: ExtensionContext,
+  storagePath: string,
   options: {
     deviceId: string;
   },
 ): Promise<DeviceCtlProcessResult> {
-  await using tmpPath = await tempFilePath(context, {
+  await using tmpPath = await tempFilePath(storagePath, {
     prefix: "processes",
   });
   // xcrun devicectl device info processes -d 2782A5CE-797F-4EB9-BDF1-14AE4425C406 --json-output <path>

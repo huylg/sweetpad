@@ -1,15 +1,19 @@
 import path from "node:path";
-import { getWorkspacePath, prepareDerivedDataPath } from "../../build/utils";
 import type { DestinationPlatform } from "../../destination/constants";
 import { cache } from "../cache";
-import { getWorkspaceConfig } from "../config";
 import { ExtensionError } from "../errors";
 import { exec } from "../exec";
 import { readJsonFile } from "../files";
 import { uniqueFilter } from "../helpers";
-import { commonLogger } from "../logger";
 import { assertUnreachable } from "../types";
 import { XcodeWorkspace } from "../xcode/workspace";
+
+const commonLogger = {
+  log: (...args: unknown[]) => console.log(...args),
+  debug: (...args: unknown[]) => console.debug(...args),
+  warn: (...args: unknown[]) => console.warn(...args),
+  error: (...args: unknown[]) => console.error(...args),
+};
 
 export type SimulatorOutput = {
   dataPath: string;
@@ -178,8 +182,9 @@ async function getBuildSettingsList(options: {
   configuration: string;
   sdk: string | undefined;
   xcworkspace: string;
+  derivedDataPath?: string | null;
 }): Promise<XcodeBuildSettings[]> {
-  const derivedDataPath = prepareDerivedDataPath();
+  const derivedDataPath = options.derivedDataPath ?? null;
 
   const args = [
     "-showBuildSettings",
@@ -240,6 +245,7 @@ export async function getBuildSettingsToAskDestination(options: {
   configuration: string;
   sdk: string | undefined;
   xcworkspace: string;
+  derivedDataPath?: string | null;
 }): Promise<XcodeBuildSettings | null> {
   try {
     const settings = await getBuildSettingsList(options);
@@ -274,6 +280,7 @@ export async function getBuildSettingsToLaunch(options: {
   configuration: string;
   sdk: string | undefined;
   xcworkspace: string;
+  derivedDataPath?: string | null;
 }): Promise<XcodeBuildSettings> {
   const settings = await getBuildSettingsList(options);
 
@@ -330,16 +337,15 @@ export async function getIsXcbeautifyInstalled() {
 /**
  * Get the xcode-build-server command path from config or default
  */
-function getXcodeBuildServerCommand(): string {
-  const customPath = getWorkspaceConfig("xcodebuildserver.path");
+function getXcodeBuildServerCommand(customPath?: string): string {
   return customPath || "xcode-build-server";
 }
 
 /**
  * Find if xcode-build-server is installed
  */
-export async function getIsXcodeBuildServerInstalled() {
-  const command = getXcodeBuildServerCommand();
+export async function getIsXcodeBuildServerInstalled(options?: { xcodebuildServerPath?: string }) {
+  const command = getXcodeBuildServerCommand(options?.xcodebuildServerPath);
 
   try {
     await exec({
@@ -372,11 +378,13 @@ export const getBasicProjectInfo = cache(
   },
 );
 
-export async function getSchemes(options: { xcworkspace: string | undefined }): Promise<XcodeScheme[]> {
+export async function getSchemes(options: {
+  xcworkspace: string | undefined;
+  useWorkspaceParser?: boolean;
+}): Promise<XcodeScheme[]> {
   commonLogger.log("Getting schemes", { xcworkspace: options?.xcworkspace ?? "undefined" });
 
-  const useWorkspaceParser = getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false;
-  if (options.xcworkspace && useWorkspaceParser) {
+  if (options.xcworkspace && options.useWorkspaceParser) {
     try {
       const workspace = await XcodeWorkspace.parseWorkspace(options.xcworkspace);
       const projects = await workspace.getProjects();
@@ -436,12 +444,13 @@ export async function getTargets(options: { xcworkspace: string }): Promise<stri
   assertUnreachable(output);
 }
 
-export async function getBuildConfigurations(options: { xcworkspace: string }): Promise<XcodeConfiguration[]> {
+export async function getBuildConfigurations(options: {
+  xcworkspace: string;
+  useWorkspaceParser?: boolean;
+}): Promise<XcodeConfiguration[]> {
   commonLogger.log("Getting build configurations", { xcworkspace: options?.xcworkspace });
 
-  const useWorkspaceParser = getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false;
-
-  if (useWorkspaceParser) {
+  if (options.useWorkspaceParser) {
     try {
       const workspace = await XcodeWorkspace.parseWorkspace(options.xcworkspace);
       const projects = await workspace.getProjects();
@@ -515,8 +524,12 @@ export async function getBuildConfigurations(options: { xcworkspace: string }): 
 /**
  * Generate xcode-build-server config
  */
-export async function generateBuildServerConfig(options: { xcworkspace: string; scheme: string }) {
-  const command = getXcodeBuildServerCommand();
+export async function generateBuildServerConfig(options: {
+  xcworkspace: string;
+  scheme: string;
+  xcodebuildServerPath?: string;
+}) {
+  const command = getXcodeBuildServerCommand(options.xcodebuildServerPath);
 
   await exec({
     command: command,
@@ -534,8 +547,8 @@ export type XcodeBuildServerConfig = {
 /**
  * Read xcode-build-server config with proper types
  */
-export async function readXcodeBuildServerConfig(): Promise<XcodeBuildServerConfig> {
-  const buildServerJsonPath = path.join(getWorkspacePath(), "buildServer.json");
+export async function readXcodeBuildServerConfig(workspacePath: string): Promise<XcodeBuildServerConfig> {
+  const buildServerJsonPath = path.join(workspacePath, "buildServer.json");
   return await readJsonFile<XcodeBuildServerConfig>(buildServerJsonPath);
 }
 
@@ -573,8 +586,8 @@ export async function getIsTuistInstalled() {
   }
 }
 
-export async function tuistGenerate() {
-  const env = getWorkspaceConfig("tuist.generate.env");
+export async function tuistGenerate(options?: { env?: Record<string, string | null> }) {
+  const env = options?.env;
   return await exec({
     command: "tuist",
     args: ["generate", "--no-open"],

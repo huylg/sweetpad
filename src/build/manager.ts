@@ -63,7 +63,10 @@ export class BuildManager {
 
         const xcworkspace = getCurrentXcodeWorkspacePath(this.context);
 
-        const schemes = await getSchemes({ xcworkspace: xcworkspace });
+        const schemes = await getSchemes({
+          xcworkspace: xcworkspace,
+          useWorkspaceParser: getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false,
+        });
 
         this.cache = schemes;
 
@@ -141,7 +144,8 @@ export class BuildManager {
       return;
     }
 
-    const isServerInstalled = await getIsXcodeBuildServerInstalled();
+    const xcodebuildServerPath = getWorkspaceConfig("xcodebuildserver.path");
+    const isServerInstalled = await getIsXcodeBuildServerInstalled({ xcodebuildServerPath });
     if (!isServerInstalled) {
       return;
     }
@@ -150,6 +154,7 @@ export class BuildManager {
     await generateBuildServerConfig({
       xcworkspace: xcworkspace,
       scheme: options.scheme,
+      xcodebuildServerPath,
     });
     await restartSwiftLSP();
 

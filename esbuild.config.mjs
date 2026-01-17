@@ -16,7 +16,7 @@ const packageJsonPath = path.resolve(process.cwd(), "package.json");
 const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
 const version = pkg.version;
 
-const config = {
+const extensionConfig = {
   entryPoints: ["./src/extension.ts"],
   bundle: true,
   outfile: "out/extension.js",
@@ -50,9 +50,23 @@ const config = {
   ],
 };
 
+const cliConfig = {
+  entryPoints: ["./src/cli/index.ts"],
+  bundle: true,
+  outfile: "out/cli.js",
+  format: "cjs",
+  platform: "node",
+  target: "es6",
+  sourcemap: isSourcemap,
+  minify: isMinify,
+  banner: {
+    js: "#!/usr/bin/env node",
+  },
+};
+
 // Upload source maps to Sentry (only on production build, because it's slow and expensive)
 if (isProduction) {
-  config.plugins.push(
+  extensionConfig.plugins.push(
     sentryEsbuildPlugin({
       org: "yevhenii-hyzyla",
       project: "sweetpad",
@@ -65,16 +79,15 @@ if (isProduction) {
 
 if (isWatch) {
   console.log("[watch] build started");
-  esbuild
-    .context(config)
-    .then((ctx) => {
-      ctx.watch();
+  Promise.all([esbuild.context(extensionConfig), esbuild.context(cliConfig)])
+    .then(([extensionCtx, cliCtx]) => {
+      extensionCtx.watch();
+      cliCtx.watch();
       console.log("Watching for changes...");
     })
     .catch(() => process.exit(1));
 } else {
-  esbuild
-    .build(config)
+  Promise.all([esbuild.build(extensionConfig), esbuild.build(cliConfig)])
     .then(() => {
       console.log("Build completed.");
     })

@@ -1,4 +1,5 @@
 import { type XcodeConfiguration, getBuildConfigurations } from "./cli/scripts";
+import { getWorkspaceConfig } from "./config";
 import { showQuickPick } from "./quick-pick";
 
 export const DEFAULT_DEBUG_CONFIGURATION = "Debug";
@@ -15,6 +16,7 @@ export async function askConfigurationBase(options: {
   // Fetch all configurations
   const configurations = await getBuildConfigurations({
     xcworkspace: options.xcworkspace,
+    useWorkspaceParser: getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false,
   });
 
   // Use default configuration if no configurations found

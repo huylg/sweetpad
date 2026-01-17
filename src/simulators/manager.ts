@@ -1,6 +1,8 @@
 import events from "node:events";
 import { type SimulatorOutput, getSimulators } from "../common/cli/scripts";
-import { commonLogger } from "../common/logger";
+const commonLogger = {
+  log: (...args: unknown[]) => console.log(...args),
+};
 import { assertUnreachable } from "../common/types";
 import {
   type SimulatorDestination,

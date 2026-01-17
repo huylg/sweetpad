@@ -1,5 +1,6 @@
 import type { ExtensionContext } from "../common/commands";
 import { type DeviceCtlProcess, getRunningProcesses } from "../common/xcode/devicectl";
+import { prepareStoragePath } from "../build/utils";
 
 /**
  * Wait while the process is launched on the device and return the process information.
@@ -15,6 +16,7 @@ export async function waitForProcessToLaunch(
   const { appName, deviceId, timeoutMs } = options;
 
   const startTime = Date.now(); // in milliseconds
+  const storagePath = await prepareStoragePath(context);
 
   // await pairDevice({ deviceId });
 
@@ -27,7 +29,7 @@ export async function waitForProcessToLaunch(
     }
 
     // Query the running processes on the device using the devicectl command
-    const result = await getRunningProcesses(context, { deviceId: deviceId });
+    const result = await getRunningProcesses(storagePath, { deviceId: deviceId });
     const runningProcesses = result?.result?.runningProcesses ?? [];
     if (runningProcesses.length === 0) {
       throw new Error("No running processes found on the device");

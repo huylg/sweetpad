@@ -54,6 +54,24 @@ tools such as **swift-format**, **swiftlint**, **xcodebuild**, **xcrun**, **xcod
 
 1. 🍏 MacOS — other platforms are currently not supported
 2. 📱 Xcode — required for building and running iOS apps via `xcodebuild`
+3. 🔍 `fzf` — required for interactive CLI picks (`brew install fzf`)
+
+## CLI
+
+SweetPad ships with a standalone CLI for build/run/clean/launch workflows.
+
+Examples:
+
+- `sweetpad build --xcworkspace MyApp.xcworkspace --scheme MyApp`
+- `sweetpad run --destination "iPhone 15" --launch-args "--mock,1"`
+- `sweetpad launch --scheme MyApp --configuration Debug`
+- `sweetpad clean --destination-id 00000000-0000-0000-0000-000000000000`
+
+Configuration:
+
+- Reads `sweetpad.*` keys from `.vscode/settings.json`
+- Supports environment overrides like `SWEETPAD_BUILD_CONFIGURATION=Debug`
+- Uses `.sweetpad/` inside the workspace for temporary files (falls back to system temp)
 
 ## Changelog
 

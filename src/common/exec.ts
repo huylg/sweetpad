@@ -1,7 +1,5 @@
-import { getWorkspacePath } from "../build/utils";
 import { ExecBaseError, ExecError } from "./errors";
 import { prepareEnvVars } from "./helpers";
-import { commonLogger } from "./logger";
 
 import { execa } from "execa";
 
@@ -28,9 +26,9 @@ export async function exec(options: {
   cwd?: string;
   env?: { [key: string]: string | null };
 }): Promise<string> {
-  const cwd = options.cwd ?? getWorkspacePath();
+  const cwd = options.cwd ?? process.cwd();
 
-  commonLogger.debug("Executing command", {
+  console.debug("Executing command", {
     command: options.command,
     args: options.args,
     cwd: cwd,
@@ -58,7 +56,7 @@ export async function exec(options: {
     });
   }
 
-  commonLogger.debug("Command executed", {
+  console.debug("Command executed", {
     command: options.command,
     args: options.args,
     cwd: cwd,

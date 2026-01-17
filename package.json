@@ -31,6 +31,9 @@
     "onDebug"
   ],
   "main": "./out/extension.js",
+  "bin": {
+    "sweetpad": "out/cli.js"
+  },
   "contributes": {
     "taskDefinitions": [
       {

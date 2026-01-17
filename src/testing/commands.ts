@@ -4,7 +4,7 @@ import { askXcodeWorkspacePath } from "../build/utils";
 import { showConfigurationPicker, showYesNoQuestion } from "../common/askers";
 import { getBuildConfigurations } from "../common/cli/scripts";
 import type { ExtensionContext } from "../common/commands";
-import { updateWorkspaceConfig } from "../common/config";
+import { getWorkspaceConfig, updateWorkspaceConfig } from "../common/config";
 import { showInputBox } from "../common/quick-pick";
 import { askSchemeForTesting, askTestingTarget } from "./utils";
 
@@ -61,6 +61,7 @@ export async function selectConfigurationForTestingCommand(context: ExtensionCon
   context.updateProgressStatus("Searching for configurations");
   const configurations = await getBuildConfigurations({
     xcworkspace: xcworkspace,
+    useWorkspaceParser: getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false,
   });
 
   let selected: string | undefined;

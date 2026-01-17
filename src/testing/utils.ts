@@ -199,6 +199,7 @@ export async function askSchemeForTesting(
   context.updateProgressStatus("Searching for scheme");
   const schemes = await getSchemes({
     xcworkspace: options.xcworkspace,
+    useWorkspaceParser: getWorkspaceConfig("system.customXcodeWorkspaceParser") ?? false,
   });
 
   const scheme = await showQuickPick({

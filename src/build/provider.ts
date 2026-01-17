@@ -12,14 +12,9 @@ import {
 } from "../common/tasks";
 import { assertUnreachable } from "../common/types";
 import type { Destination } from "../destination/types";
-import {
-  buildApp,
-  getXcodeBuildDestinationString,
-  resolveDependencies,
-  runOnMac,
-  runOniOSDevice,
-  runOniOSSimulator,
-} from "./commands";
+import { resolveDependencies } from "./commands";
+import { buildApp, getXcodeBuildDestinationString, runOnMac, runOniOSDevice, runOniOSSimulator } from "./runner";
+import { createExtensionBuildRuntimeContext } from "./runtime";
 import { DEFAULT_BUILD_PROBLEM_MATCHERS } from "./constants";
 import { askConfiguration, askDestinationToRunOn, askSchemeForBuild, askXcodeWorkspacePath } from "./utils";
 
@@ -180,14 +175,15 @@ class ActionDispatcher {
       xcworkspace: xcworkspace,
     });
 
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString({ destination: destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
     const launchArgs: string[] = definition.launchArgs ?? getWorkspaceConfig("build.launchArgs") ?? [];
     const launchEnv: { [key: string]: string } = definition.launchEnv ?? getWorkspaceConfig("build.launchEnv") ?? {};
 
-    await buildApp(this.context, terminal, {
+    await buildApp(runtime, terminal, {
       scheme: scheme,
       sdk: sdk,
       configuration: configuration,
@@ -200,7 +196,7 @@ class ActionDispatcher {
     });
 
     if (destination.type === "macOS") {
-      await runOnMac(this.context, terminal, {
+      await runOnMac(runtime, terminal, {
         scheme: scheme,
         configuration: configuration,
         xcworkspace: xcworkspace,
@@ -214,7 +210,7 @@ class ActionDispatcher {
       destination.type === "visionOSSimulator" ||
       destination.type === "tvOSSimulator"
     ) {
-      await runOniOSSimulator(this.context, terminal, {
+      await runOniOSSimulator(runtime, terminal, {
         scheme: scheme,
         destination: destination,
         sdk: sdk,
@@ -231,7 +227,7 @@ class ActionDispatcher {
       destination.type === "tvOSDevice" ||
       destination.type === "visionOSDevice"
     ) {
-      await runOniOSDevice(this.context, terminal, {
+      await runOniOSDevice(runtime, terminal, {
         scheme: scheme,
         destination: destination,
         sdk: sdk,
@@ -283,11 +279,12 @@ class ActionDispatcher {
       xcworkspace: xcworkspace,
     });
 
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString({ destination: destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
-    await buildApp(this.context, terminal, {
+    await buildApp(runtime, terminal, {
       scheme: scheme,
       sdk: sdk,
       configuration: configuration,
@@ -344,7 +341,7 @@ class ActionDispatcher {
     const launchEnv: { [key: string]: string } = definition.launchEnv ?? getWorkspaceConfig("build.launchEnv") ?? {};
 
     if (destination.type === "macOS") {
-      await runOnMac(this.context, terminal, {
+      await runOnMac(runtime, terminal, {
         scheme: scheme,
         configuration: configuration,
         xcworkspace: xcworkspace,
@@ -358,7 +355,7 @@ class ActionDispatcher {
       destination.type === "visionOSSimulator" ||
       destination.type === "tvOSSimulator"
     ) {
-      await runOniOSSimulator(this.context, terminal, {
+      await runOniOSSimulator(runtime, terminal, {
         scheme: scheme,
         destination: destination,
         sdk: sdk,
@@ -375,7 +372,7 @@ class ActionDispatcher {
       destination.type === "tvOSDevice" ||
       destination.type === "visionOSDevice"
     ) {
-      await runOniOSDevice(this.context, terminal, {
+      await runOniOSDevice(runtime, terminal, {
         scheme: scheme,
         destination: destination,
         sdk: sdk,
@@ -415,11 +412,12 @@ class ActionDispatcher {
       xcworkspace: xcworkspace,
     });
 
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString({ destination: destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
-    await buildApp(this.context, terminal, {
+    await buildApp(runtime, terminal, {
       scheme: scheme,
       sdk: sdk,
       configuration: configuration,
@@ -455,11 +453,12 @@ class ActionDispatcher {
       xcworkspace: xcworkspace,
     });
 
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString({ destination: destination });
+    const runtime = await createExtensionBuildRuntimeContext(this.context);
+    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
-    await buildApp(this.context, terminal, {
+    await buildApp(runtime, terminal, {
       scheme: scheme,
       sdk: sdk,
       configuration: configuration,

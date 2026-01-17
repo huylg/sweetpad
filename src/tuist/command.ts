@@ -10,6 +10,7 @@ import {
 } from "../common/cli/scripts";
 import type { ExtensionContext } from "../common/commands";
 import { ExtensionError } from "../common/errors";
+import { getWorkspaceConfig } from "../common/config";
 
 async function tuistCheckInstalled() {
   const isTuistInstalled = await getIsTuistInstalled();
@@ -22,7 +23,9 @@ export async function tuistGenerateCommand(context: ExtensionContext) {
   context.updateProgressStatus("Running 'tuist generate'");
   await tuistCheckInstalled();
 
-  const raw = await tuistGenerate();
+  const raw = await tuistGenerate({
+    env: getWorkspaceConfig("tuist.generate.env"),
+  });
   if (raw.includes("tuist install")) {
     vscode.window.showErrorMessage(`Please run "tuist install" first`);
     return;

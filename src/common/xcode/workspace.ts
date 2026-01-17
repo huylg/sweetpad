@@ -1,7 +1,10 @@
 import path from "node:path";
 import { XmlElement, type XmlNode, parseXml } from "@rgrove/parse-xml";
 import { readFile } from "../files";
-import { commonLogger } from "../logger";
+const commonLogger = {
+  debug: (...args: unknown[]) => console.debug(...args),
+  error: (...args: unknown[]) => console.error(...args),
+};
 import { assertUnreachable, isNotNull } from "../types";
 import { type XcodeProject, type XcodeScheme, parseXcodeProject } from "./project";
 
@@ -178,6 +181,10 @@ export class XcodeWorkspace {
     const location = item.location;
     if (!location) {
       commonLogger.debug("Item has no location", { item: item });
+      return null;
+    }
+    if (!location.path) {
+      commonLogger.debug("Location has no path", { location: location });
       return null;
     }
 
