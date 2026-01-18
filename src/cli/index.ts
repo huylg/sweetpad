@@ -25,6 +25,7 @@ type CliOptions = {
   destinationId?: string;
   destinationName?: string;
   sdk?: string;
+  arch?: string;
   debug?: boolean;
   launchArgs: string[];
   launchEnv: Record<string, string>;
@@ -84,6 +85,10 @@ function parseArgs(argv: string[]): CliOptions {
         break;
       case "--sdk":
         options.sdk = next;
+        i++;
+        break;
+      case "--arch":
+        options.arch = next;
         i++;
         break;
       case "--launch-args":
@@ -160,6 +165,7 @@ function printHelp(): void {
       "  --destination-id <id>     Destination UDID",
       "  --destination <name>      Destination name or label substring",
       "  --sdk <sdk>               Xcode SDK (macosx, iphonesimulator, ...)",
+      "  --arch <arch>             Architecture (x86_64, arm64)",
       "  --debug                   Enable debug build settings",
       "  --launch-args <args>      Comma-separated or JSON array",
       "  --launch-env <env>        KEY=VALUE pairs or JSON object",
@@ -292,6 +298,13 @@ async function run(): Promise<void> {
   });
 
   const xcworkspace = await resolveXcworkspace(options, workspacePath, config, runtime);
+  const arch =
+    options.arch ?? runtime.getRememberedValue<string>("cli.arch") ?? getCliConfig<string>(config, "build.arch");
+
+  if (arch) {
+    runtime.setRememberedValue("cli.arch", arch);
+    config["build.arch"] = arch;
+  }
   const scheme = options.scheme ?? (await pickSchemeSmart({ xcworkspace, useWorkspaceParser, context: runtime }));
   const configuration =
     options.configuration ??

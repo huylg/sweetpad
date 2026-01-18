@@ -23,6 +23,7 @@ The following selections are automatically remembered:
 | `cli.configuration`  | Build configuration                  | `"Debug"`                    |
 | `cli.xcworkspace`    | Xcode workspace path                 | `"/path/to/App.xcworkspace"` |
 | `cli.destination.id` | Destination ID (UDID or platform ID) | `"iPhone 15 Pro"`            |
+| `cli.arch`           | Build architecture (x86_64, arm64)   | `"x86_64"`                   |
 
 ### 3. Auto-Selection Logic
 
@@ -69,8 +70,27 @@ $ sweetpad run
 # - Scheme: MyApp (remembered)
 # - Configuration: Debug (remembered)
 # - Destination: iPhone 15 Pro (remembered)
+# - Architecture: x86_64 (remembered if set previously)
 
 # Build and run immediately...
+```
+
+### Architecture Example
+
+First time building for x86_64 (for Rosetta):
+
+```bash
+$ sweetpad run --arch x86_64
+# Builds with ARCHS=x86_64 VALID_ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO
+# - Architecture: x86_64 is remembered
+```
+
+Subsequent runs automatically use x86_64:
+
+```bash
+$ sweetpad run
+# No --arch needed! Uses remembered x86_64
+# - Architecture: x86_64 (remembered)
 ```
 
 ### Override with CLI Flags
@@ -90,7 +110,8 @@ $ sweetpad run --scheme MyAppTests --destination-id "0000-0000-0000"
   "cli.scheme": "MyApp",
   "cli.configuration": "Debug",
   "cli.xcworkspace": "/path/to/App.xcworkspace",
-  "cli.destination.id": "iPhone 15 Pro"
+  "cli.destination.id": "iPhone 15 Pro",
+  "cli.arch": "x86_64"
 }
 ```
 
@@ -138,6 +159,9 @@ Or delete specific keys by editing the JSON file manually.
    - Updated `resolveDestination()` to use smart picker
    - Replaced `pickScheme()` with `pickSchemeSmart()`
    - Replaced `pickConfiguration()` with `pickConfigurationSmart()`
+   - Added `--arch` CLI flag
+   - Added architecture resolution (CLI flag > remembered state > config)
+   - Added architecture remember logic
    - Added `runtime.savePersistentState()` call after selections
 
 ## Benefits
