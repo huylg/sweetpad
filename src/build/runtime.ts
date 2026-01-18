@@ -1,12 +1,10 @@
 import type { ExtensionContext } from "../common/commands";
 import { getWorkspaceConfig } from "../common/config";
 import { getSimulatorByUdid } from "../simulators/utils";
-import { getWorkspacePath, prepareStoragePath, restartSwiftLSP } from "./utils";
 import type { BuildRuntimeContext } from "./runner";
+import { getWorkspacePath, prepareStoragePath, restartSwiftLSP } from "./utils";
 
-export async function createExtensionBuildRuntimeContext(
-  context: ExtensionContext,
-): Promise<BuildRuntimeContext> {
+export async function createExtensionBuildRuntimeContext(context: ExtensionContext): Promise<BuildRuntimeContext> {
   const storagePath = await prepareStoragePath(context);
   const workspacePath = getWorkspacePath();
 

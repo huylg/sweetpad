@@ -1,8 +1,8 @@
 import events from "node:events";
+import { prepareStoragePath } from "../build/utils";
 import type { ExtensionContext } from "../common/commands";
 import { checkUnreachable } from "../common/types";
 import { listDevices } from "../common/xcode/devicectl";
-import { prepareStoragePath } from "../build/utils";
 import {
   type DeviceDestination,
   iOSDeviceDestination,

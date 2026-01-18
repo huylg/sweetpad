@@ -1,14 +1,20 @@
 import path from "node:path";
-import { ExtensionError } from "../common/errors";
 import { buildApp, getXcodeBuildDestinationString, runOnMac, runOniOSDevice, runOniOSSimulator } from "../build/runner";
 import { getBuildSettingsToLaunch } from "../common/cli/scripts";
-import { CliRuntimeContext } from "./context";
-import { loadCliConfig, getCliConfig } from "./config";
-import { CliTaskTerminal } from "./terminal";
-import { listDestinations, pickConfiguration, pickDestination, pickScheme, pickXcodeWorkspacePath } from "./pickers";
-import { SimulatorsManager } from "../simulators/manager";
-import type { Destination } from "../destination/types";
+import { ExtensionError } from "../common/errors";
 import { assertUnreachable } from "../common/types";
+import type { Destination } from "../destination/types";
+import { SimulatorsManager } from "../simulators/manager";
+import { getCliConfig, loadCliConfig } from "./config";
+import { CliRuntimeContext } from "./context";
+import {
+  listDestinations,
+  pickConfigurationSmart,
+  pickDestinationSmart,
+  pickSchemeSmart,
+  pickXcodeWorkspacePathSmart,
+} from "./pickers";
+import { CliTaskTerminal } from "./terminal";
 
 type CliOptions = {
   command?: "build" | "run" | "clean" | "launch";
@@ -105,7 +111,10 @@ function parseListValue(raw: string): string[] {
   if (!trimmed) {
     return [];
   }
-  return trimmed.split(",").map((value) => value.trim()).filter(Boolean);
+  return trimmed
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function parseEnvValue(raw: string): Record<string, string> {
@@ -164,6 +173,7 @@ async function resolveXcworkspace(
   options: CliOptions,
   workspacePath: string,
   config: Record<string, unknown>,
+  runtime: CliRuntimeContext,
 ): Promise<string> {
   const configPath = getCliConfig<string>(config, "build.xcodeWorkspacePath");
   const rawPath = options.xcworkspace ?? configPath;
@@ -172,7 +182,7 @@ async function resolveXcworkspace(
     return path.isAbsolute(rawPath) ? rawPath : path.join(workspacePath, rawPath);
   }
 
-  return await pickXcodeWorkspacePath({ workspacePath });
+  return await pickXcodeWorkspacePathSmart({ workspacePath, context: runtime });
 }
 
 function resolveDerivedDataPath(workspacePath: string, config: Record<string, unknown>): string | null {
@@ -193,9 +203,10 @@ async function resolveDestination(options: {
   derivedDataPath?: string | null;
   destinationId?: string;
   destinationName?: string;
+  runtime: CliRuntimeContext;
 }): Promise<Destination> {
   if (!options.destinationId && !options.destinationName) {
-    return await pickDestination({
+    return await pickDestinationSmart({
       simulatorsManager: options.simulatorsManager,
       storagePath: options.storagePath,
       scheme: options.scheme,
@@ -203,6 +214,7 @@ async function resolveDestination(options: {
       sdk: options.sdk,
       xcworkspace: options.xcworkspace,
       derivedDataPath: options.derivedDataPath,
+      context: options.runtime,
     });
   }
 
@@ -212,9 +224,10 @@ async function resolveDestination(options: {
   });
 
   if (options.destinationId) {
-    const destination = destinations.find((item) => matchDestinationId(item, options.destinationId));
+    const destinationId = options.destinationId;
+    const destination = destinations.find((item) => matchDestinationId(item, destinationId));
     if (!destination) {
-      throw new ExtensionError(`Destination not found for id: ${options.destinationId}`);
+      throw new ExtensionError(`Destination not found for id: ${destinationId}`);
     }
     return destination;
   }
@@ -227,7 +240,7 @@ async function resolveDestination(options: {
     return matches[0];
   }
 
-  return await pickDestination({
+  return await pickDestinationSmart({
     simulatorsManager: options.simulatorsManager,
     storagePath: options.storagePath,
     scheme: options.scheme,
@@ -235,6 +248,7 @@ async function resolveDestination(options: {
     sdk: options.sdk,
     xcworkspace: options.xcworkspace,
     derivedDataPath: options.derivedDataPath,
+    context: options.runtime,
   });
 }
 
@@ -253,7 +267,9 @@ function matchDestinationName(destination: Destination, name: string): boolean {
   }
   const label = destination.label.toLowerCase();
   const destName = "name" in destination ? destination.name.toLowerCase() : label;
-  return label.includes(normalized) || destName.includes(normalized) || destination.id.toLowerCase().includes(normalized);
+  return (
+    label.includes(normalized) || destName.includes(normalized) || destination.id.toLowerCase().includes(normalized)
+  );
 }
 
 async function run(): Promise<void> {
@@ -275,12 +291,12 @@ async function run(): Promise<void> {
     simulatorsManager,
   });
 
-  const xcworkspace = await resolveXcworkspace(options, workspacePath, config);
-  const scheme = options.scheme ?? (await pickScheme({ xcworkspace, useWorkspaceParser }));
+  const xcworkspace = await resolveXcworkspace(options, workspacePath, config, runtime);
+  const scheme = options.scheme ?? (await pickSchemeSmart({ xcworkspace, useWorkspaceParser, context: runtime }));
   const configuration =
     options.configuration ??
     getCliConfig<string>(config, "build.configuration") ??
-    (await pickConfiguration({ xcworkspace, useWorkspaceParser }));
+    (await pickConfigurationSmart({ xcworkspace, useWorkspaceParser, context: runtime }));
   const derivedDataPath = resolveDerivedDataPath(workspacePath, config);
 
   const destination = await resolveDestination({
@@ -293,7 +309,10 @@ async function run(): Promise<void> {
     derivedDataPath,
     destinationId: options.destinationId,
     destinationName: options.destinationName,
+    runtime,
   });
+
+  await runtime.savePersistentState();
 
   const sdk = options.sdk ?? destination.platform;
   const destinationRaw = getXcodeBuildDestinationString(runtime, { destination });
@@ -352,7 +371,7 @@ async function run(): Promise<void> {
     }
     case "run":
     case "launch": {
-      const debug = options.command === "launch" ? true : options.debug ?? false;
+      const debug = options.command === "launch" ? true : (options.debug ?? false);
       await buildApp(runtime, terminal, {
         scheme,
         sdk,

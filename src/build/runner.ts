@@ -1,5 +1,4 @@
 import path from "node:path";
-import type { TaskTerminal, Command } from "../common/tasks";
 import {
   type XcodeBuildServerConfig,
   generateBuildServerConfig,
@@ -11,6 +10,7 @@ import {
 } from "../common/cli/scripts";
 import { ExtensionError } from "../common/errors";
 import { createDirectory, isFileExists, readJsonFile, removeDirectory, tempFilePathInDirectory } from "../common/files";
+import type { Command, TaskTerminal } from "../common/tasks";
 import { assertUnreachable } from "../common/types";
 import type { Destination } from "../destination/types";
 import type { DeviceDestination } from "../devices/types";
@@ -72,7 +72,10 @@ async function prepareBundleDir(runtime: BuildRuntimeContext, scheme: string): P
 /**
  * Check if buildServer.json needs to be regenerated and regenerate it if needed
  */
-async function generateBuildServerConfigOnBuild(runtime: BuildRuntimeContext, options: { scheme: string; xcworkspace: string }) {
+async function generateBuildServerConfigOnBuild(
+  runtime: BuildRuntimeContext,
+  options: { scheme: string; xcworkspace: string },
+) {
   const isEnabled = runtime.getConfigOrDefault("xcodebuildserver.autogenerate", true);
   if (!isEnabled) {
     return;

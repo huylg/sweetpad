@@ -1,6 +1,6 @@
+import { prepareStoragePath } from "../build/utils";
 import type { ExtensionContext } from "../common/commands";
 import { type DeviceCtlProcess, getRunningProcesses } from "../common/xcode/devicectl";
-import { prepareStoragePath } from "../build/utils";
 
 /**
  * Wait while the process is launched on the device and return the process information.

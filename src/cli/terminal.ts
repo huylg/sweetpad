@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { quote } from "shell-quote";
-import type { CommandOptions, TaskTerminal } from "../common/tasks";
 import { prepareEnvVars } from "../common/helpers";
+import type { CommandOptions, TaskTerminal } from "../common/tasks";
 
 type TerminalTextColor = "green" | "red" | "blue" | "yellow" | "magenta" | "cyan" | "white";
 type TerminalWriteOptions = {

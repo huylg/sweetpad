@@ -1,24 +1,21 @@
 import path from "node:path";
 const DEFAULT_DEBUG_CONFIGURATION = "Debug";
 const DEFAULT_RELEASE_CONFIGURATION = "Release";
-import {
-  getBuildConfigurations,
-  getBuildSettingsToAskDestination,
-  getSchemes,
-} from "../common/cli/scripts";
-import { findFilesRecursive } from "../common/files";
+import { getBuildConfigurations, getBuildSettingsToAskDestination, getSchemes } from "../common/cli/scripts";
 import { ExtensionError } from "../common/errors";
-import { listDevicesInDirectory } from "../common/xcode/devicectl";
+import { findFilesRecursive } from "../common/files";
 import { checkUnreachable } from "../common/types";
+import { listDevicesInDirectory } from "../common/xcode/devicectl";
+import { type Destination, macOSDestination } from "../destination/types";
 import { getMacOSArchitecture, splitSupportedDestinatinos } from "../destination/utils";
-import { macOSDestination, type Destination } from "../destination/types";
 import {
   iOSDeviceDestination,
   tvOSDeviceDestination,
   visionOSDeviceDestination,
   watchOSDeviceDestination,
 } from "../devices/types";
-import { SimulatorsManager } from "../simulators/manager";
+import type { SimulatorsManager } from "../simulators/manager";
+import type { CliRuntimeContext } from "./context";
 import { fzfPick } from "./fzf";
 
 export async function pickScheme(options: {
@@ -204,4 +201,159 @@ async function detectXcodeWorkspacesPaths(workspacePath: string): Promise<string
 function formatDestinationLabel(destination: Destination): string {
   const detail = destination.quickPickDetails ? ` - ${destination.quickPickDetails}` : "";
   return `${destination.label}${detail}`;
+}
+
+export async function pickSchemeSmart(options: {
+  xcworkspace: string;
+  prompt?: string;
+  useWorkspaceParser?: boolean;
+  context: CliRuntimeContext;
+}): Promise<string> {
+  const remembered = options.context.getRememberedValue<string>("cli.scheme");
+  const schemes = await getSchemes({
+    xcworkspace: options.xcworkspace,
+    useWorkspaceParser: options.useWorkspaceParser,
+  });
+  if (schemes.length === 0) {
+    throw new ExtensionError("No schemes found");
+  }
+
+  const rememberedScheme = remembered && schemes.find((s) => s.name === remembered);
+
+  if (rememberedScheme) {
+    return rememberedScheme.name;
+  }
+
+  const selected = await pickScheme({
+    xcworkspace: options.xcworkspace,
+    prompt: options.prompt,
+    useWorkspaceParser: options.useWorkspaceParser,
+  });
+  options.context.setRememberedValue("cli.scheme", selected);
+  return selected;
+}
+
+export async function pickConfigurationSmart(options: {
+  xcworkspace: string;
+  useWorkspaceParser?: boolean;
+  context: CliRuntimeContext;
+}): Promise<string> {
+  const remembered = options.context.getRememberedValue<string>("cli.configuration");
+  const configurations = await getBuildConfigurations({
+    xcworkspace: options.xcworkspace,
+    useWorkspaceParser: options.useWorkspaceParser,
+  });
+
+  if (configurations.length === 0) {
+    return DEFAULT_DEBUG_CONFIGURATION;
+  }
+
+  if (configurations.length === 1) {
+    return configurations[0].name;
+  }
+
+  if (
+    configurations.length === 2 &&
+    configurations.some((c) => c.name === DEFAULT_DEBUG_CONFIGURATION) &&
+    configurations.some((c) => c.name === DEFAULT_RELEASE_CONFIGURATION)
+  ) {
+    return DEFAULT_DEBUG_CONFIGURATION;
+  }
+
+  const rememberedConfig = remembered && configurations.find((c) => c.name === remembered);
+
+  if (rememberedConfig) {
+    return rememberedConfig.name;
+  }
+
+  const selected = await pickConfiguration({
+    xcworkspace: options.xcworkspace,
+    useWorkspaceParser: options.useWorkspaceParser,
+  });
+  options.context.setRememberedValue("cli.configuration", selected);
+  return selected;
+}
+
+export async function pickXcodeWorkspacePathSmart(options: {
+  workspacePath: string;
+  context: CliRuntimeContext;
+}): Promise<string> {
+  const remembered = options.context.getRememberedValue<string>("cli.xcworkspace");
+  const paths = await detectXcodeWorkspacesPaths(options.workspacePath);
+  if (paths.length === 0) {
+    throw new ExtensionError("No xcode workspaces found", { context: { cwd: options.workspacePath } });
+  }
+
+  if (remembered && paths.includes(remembered)) {
+    return remembered;
+  }
+
+  if (paths.length === 1) {
+    return paths[0];
+  }
+
+  const selected = await pickXcodeWorkspacePath({ workspacePath: options.workspacePath });
+  options.context.setRememberedValue("cli.xcworkspace", selected);
+  return selected;
+}
+
+export async function pickDestinationSmart(options: {
+  simulatorsManager: SimulatorsManager;
+  storagePath: string;
+  scheme: string;
+  configuration: string;
+  sdk: string | undefined;
+  xcworkspace: string;
+  derivedDataPath?: string | null;
+  context: CliRuntimeContext;
+}): Promise<Destination> {
+  const rememberedId = options.context.getRememberedValue<string>("cli.destination.id");
+  const buildSettings = await getBuildSettingsToAskDestination({
+    scheme: options.scheme,
+    configuration: options.configuration,
+    sdk: options.sdk,
+    xcworkspace: options.xcworkspace,
+    derivedDataPath: options.derivedDataPath,
+  });
+
+  const destinations = await listDestinations({
+    simulatorsManager: options.simulatorsManager,
+    storagePath: options.storagePath,
+  });
+
+  const { supported, unsupported } = splitSupportedDestinatinos({
+    destinations,
+    supportedPlatforms: buildSettings?.supportedPlatforms,
+  });
+
+  if (supported.length === 0 && unsupported.length === 0) {
+    throw new ExtensionError("No destinations found");
+  }
+
+  const allDestinations = [...supported, ...unsupported];
+
+  if (rememberedId) {
+    const rememberedDestination = allDestinations.find((d) => {
+      if ("udid" in d) {
+        return d.udid === rememberedId || d.id === rememberedId;
+      }
+      return d.id === rememberedId;
+    });
+
+    if (rememberedDestination && supported.includes(rememberedDestination)) {
+      return rememberedDestination;
+    }
+  }
+
+  const selected = await pickDestination({
+    simulatorsManager: options.simulatorsManager,
+    storagePath: options.storagePath,
+    scheme: options.scheme,
+    configuration: options.configuration,
+    sdk: options.sdk,
+    xcworkspace: options.xcworkspace,
+    derivedDataPath: options.derivedDataPath,
+  });
+  options.context.setRememberedValue("cli.destination.id", selected.id);
+  return selected;
 }

@@ -9,8 +9,8 @@ import {
   tuistTest,
 } from "../common/cli/scripts";
 import type { ExtensionContext } from "../common/commands";
-import { ExtensionError } from "../common/errors";
 import { getWorkspaceConfig } from "../common/config";
+import { ExtensionError } from "../common/errors";
 
 async function tuistCheckInstalled() {
   const isTuistInstalled = await getIsTuistInstalled();

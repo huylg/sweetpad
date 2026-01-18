@@ -3,13 +3,17 @@ import * as vscode from "vscode";
 import type { BuildTreeItem } from "./tree";
 
 import { showConfigurationPicker, showYesNoQuestion } from "../common/askers";
-import { type XcodeScheme, generateBuildServerConfig, getBuildConfigurations, getIsXcodeBuildServerInstalled } from "../common/cli/scripts";
+import {
+  type XcodeScheme,
+  generateBuildServerConfig,
+  getBuildConfigurations,
+  getIsXcodeBuildServerInstalled,
+} from "../common/cli/scripts";
 import type { ExtensionContext } from "../common/commands";
 import { getWorkspaceConfig, updateWorkspaceConfig } from "../common/config";
 import { ExecBaseError, ExtensionError } from "../common/errors";
 import { exec } from "../common/exec";
 import { getWorkspaceRelativePath, isFileExists, removeDirectory } from "../common/files";
-import { commonLogger } from "../common/logger";
 import { showInputBox } from "../common/quick-pick";
 import { runTask } from "../common/tasks";
 import { assertUnreachable } from "../common/types";
@@ -28,7 +32,6 @@ import {
   restartSwiftLSP,
   selectXcodeWorkspace,
 } from "./utils";
-
 
 /**
  * Build app without running

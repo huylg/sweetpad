@@ -13,9 +13,9 @@ import {
 import { assertUnreachable } from "../common/types";
 import type { Destination } from "../destination/types";
 import { resolveDependencies } from "./commands";
+import { DEFAULT_BUILD_PROBLEM_MATCHERS } from "./constants";
 import { buildApp, getXcodeBuildDestinationString, runOnMac, runOniOSDevice, runOniOSSimulator } from "./runner";
 import { createExtensionBuildRuntimeContext } from "./runtime";
-import { DEFAULT_BUILD_PROBLEM_MATCHERS } from "./constants";
 import { askConfiguration, askDestinationToRunOn, askSchemeForBuild, askXcodeWorkspacePath } from "./utils";
 
 interface TaskDefinition extends vscode.TaskDefinition {
@@ -176,7 +176,8 @@ class ActionDispatcher {
     });
 
     const runtime = await createExtensionBuildRuntimeContext(this.context);
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
+    const destinationRaw =
+      definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
@@ -280,7 +281,8 @@ class ActionDispatcher {
     });
 
     const runtime = await createExtensionBuildRuntimeContext(this.context);
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
+    const destinationRaw =
+      definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
@@ -413,7 +415,8 @@ class ActionDispatcher {
     });
 
     const runtime = await createExtensionBuildRuntimeContext(this.context);
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
+    const destinationRaw =
+      definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
@@ -454,7 +457,8 @@ class ActionDispatcher {
     });
 
     const runtime = await createExtensionBuildRuntimeContext(this.context);
-    const destinationRaw = definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
+    const destinationRaw =
+      definition.destination ?? getXcodeBuildDestinationString(runtime, { destination: destination });
 
     const sdk = destination.platform;
 
