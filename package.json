@@ -1214,6 +1214,7 @@
     "build": "node esbuild.config.mjs --sourcemap",
     "watch": "node esbuild.config.mjs --sourcemap --watch",
     "vscode:prepublish": "node esbuild.config.mjs --minify --sourcemap --production",
+    "build:cli:standalone": "npm run build && bun build ./out/cli.js --compile --outfile sweetpad",
     "test": "vscode-test",
     "jest": "jest",
     "check:format:code": "biome format --write",
