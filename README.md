@@ -1,4 +1,4 @@
-# SweetPad CLI (iOS/Swift development) <img valign="middle" alt="SweetPad logo" width="40" src="./images/logo.png" />
+# SweetPad CLI (iOS/Swift development) 
 
 SweetPad CLI is a fork of [sweetpad-dev/sweetpad](https://github.com/sweetpad-dev/sweetpad). This fork extracts the
 standalone CLI for building, running, and managing iOS/Swift projects from the command line.
