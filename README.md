@@ -21,7 +21,7 @@ automatically.
 
 ## Demo
 
-<video src="demo/demo.mov" width="600" controls></video>
+![Demo](demo/demo.gif)
 
 ## CLI Installation
 
