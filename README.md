@@ -1,82 +1,82 @@
-# SweetPad (iOS/Swift development) <img valign="middle" alt="SweetPad logo" width="40" src="./images/logo.png" />
+# SweetPad CLI (iOS/Swift development) <img valign="middle" alt="SweetPad logo" width="40" src="./images/logo.png" />
 
-📚 [Documentation](https://sweetpad.hyzyla.dev/) | 📦
-[VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=sweetpad.sweetpad) | 🐞
-[Github Issues](https://github.com/sweetpad-dev/sweetpad/issues) | 🏔️ [Roadmap](https://github.com/sweetpad-dev/sweetpad/blob/main/TODO.md)
+SweetPad CLI is a fork of [sweetpad-dev/sweetpad](https://github.com/sweetpad-dev/sweetpad). This fork extracts the
+standalone CLI for building, running, and managing iOS/Swift projects from the command line.
 
-<!-- [![Discord](https://img.shields.io/badge/SweetPad-Discord-blue?logo=discord&logoColor=white&link=https%3A%2F%2Fdiscord.gg%2FXZwRtQ5dew)](https://discord.gg/XZwRtQ5dew) -->
+SweetPad integrates open-source tools such as **swift-format**, **swiftlint**, **xcodebuild**, **xcrun**,
+**xcode-build-server**, **sourcekit-lsp** to provide a complete iOS development workflow.
 
-<hr/>
-You can support this project by giving a star on GitHub ⭐️ or by becoming an official sponsor 💰
+##  Autocomplete
 
-[![GitHub](https://img.shields.io/github/stars/sweetpad-dev/sweetpad?style=social)](https://github.com/sweetpad-dev/sweetpad)
-[![Github Sponsors](https://img.shields.io/badge/Github%20Sponsors-%E2%9D%A4-red?style=flat&logo=github)](https://github.com/sponsors/sweetpad-dev)
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee%20-%E2%9D%A4-red?style=flat&logo=buy-me-a-coffee&link=https%3A%2F%2Fgithub.com%2Fsponsors%2Fsweetpad-dev)](https://www.buymeacoffee.com/hyzyla)
+SweetPad CLI provides interactive autocomplete for workspace, scheme, configuration, and destination selection using
+`fzf`. When configuration is missing or incomplete, the CLI will prompt you to select the appropriate options
+automatically.
 
-<!-- [![Twitter](https://img.shields.io/twitter/follow/sweetpad_dev?style=social&logo=twitter)](https://twitter.com/sweetpad_dev) -->
-<hr/>
+**Benefits:**
 
-Develop Swift/iOS projects using VSCode or Cursor.
+- No manual configuration needed - SweetPad discovers your Xcode project structure
+- Interactive selection with fuzzy search powered by `fzf`
+- Remembers your selections across sessions for faster workflows
+- Easy to get started with any iOS project
 
-The long-term goal is to make VSCode/Cursor a viable alternative to Xcode for iOS development by integrating open-source
-tools such as **swift-format**, **swiftlint**, **xcodebuild**, **xcrun**, **xcode-build-server**, **sourcekit-lsp**.
+## CLI Installation
 
-![iOS simulator](./docs/images/build-demo.gif)
+### Prerequisites
 
-## Feature
+1. **macOS** — required for iOS development
+2. **Xcode** — required for building and running iOS apps
+3. **fzf** — for interactive CLI selections (`brew install fzf`)
+4. **bun** — JavaScript runtime for running the CLI (`brew install bun`)
 
-- ✅ **[Autocomplete](https://sweetpad.hyzyla.dev/docs/autocomplete)** — setup autocomplete using
-  [xcode-build-server](https://github.com/SolaWing/xcode-build-server)
-  
-- 🛠️ **[Build & Run](https://sweetpad.hyzyla.dev/docs/build)** — build and run application using
-  [xcodebuild](https://developer.apple.com/library/archive/technotes/tn2339/_index.html)
-  
-- 💅🏼 **[Format](https://sweetpad.hyzyla.dev/docs/format)** — format files using
-  [swift-format](https://github.com/apple/swift-format) or other formatter of your choice
-  
-- 📱 **[Simulator](https://sweetpad.hyzyla.dev/docs/simulators)** — manage iOS simulators
-  
-- 📱 **[Devices](https://sweetpad.hyzyla.dev/docs/devices)** — run iOS applications on iPhone or iPad
- 
-- 🛠️ **[Tools](https://sweetpad.hyzyla.dev/docs/tools)** — manage essential iOS development tools using
-  [Homebrew](https://brew.sh/)
-  
-- 🪲 **[Debug](https://sweetpad.hyzyla.dev/docs/debug)** — debug iOS applications using
-  [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb)
-  
-- ✅ **[Tests](https://sweetpad.hyzyla.dev/docs/tests)** — run tests on simulators and devices
-  
+### Install
 
-> 💡 If you have any ideas, please open an issue or start a discussion on the
-> [SweetPad](https://github.com/sweetpad-dev/sweetpad) GitHub repository.
+```bash
+# Clone the repository
+git clone https://github.com/huylg/sweetpad.git
+cd sweetpad
 
-## Requirements
+# Build the standalone CLI executable
+bun run build:cli:standalone
 
-1. 🍏 MacOS — other platforms are currently not supported
-2. 📱 Xcode — required for building and running iOS apps via `xcodebuild`
-3. 🔍 `fzf` — required for interactive CLI picks (`brew install fzf`)
+# Move to your PATH
+mv sweetpad /usr/local/bin/
+```
 
-## CLI
+## CLI Usage
 
-SweetPad ships with a standalone CLI for build/run/clean/launch workflows.
+SweetPad CLI provides build/run/clean/launch workflows for iOS projects.
 
-Examples:
+### Commands
 
-- `sweetpad build --xcworkspace MyApp.xcworkspace --scheme MyApp`
-- `sweetpad run --destination "iPhone 15" --launch-args "--mock,1"`
-- `sweetpad launch --scheme MyApp --configuration Debug`
-- `sweetpad clean --destination-id 00000000-0000-0000-0000-000000000000`
+**Build:**
 
-Configuration:
+```bash
+sweetpad build --xcworkspace MyApp.xcworkspace --scheme MyApp
+```
 
-- Reads `sweetpad.*` keys from `.vscode/settings.json`
+**Run on simulator:**
+
+```bash
+sweetpad run --destination "iPhone 15" --launch-args "--mock,1"
+```
+
+**Launch app:**
+
+```bash
+sweetpad launch --scheme MyApp --configuration Debug
+```
+
+**Clean:**
+
+```bash
+sweetpad clean --destination-id 00000000-0000-0000-0000-000000000000
+```
+
+### Configuration
+
 - Supports environment overrides like `SWEETPAD_BUILD_CONFIGURATION=Debug`
-- Uses `.sweetpad/` inside the workspace for temporary files (falls back to system temp)
-
-## Changelog
-
-The [CHANGELOG.md](./CHANGELOG.md) contains all notable changes to the "sweet pad" extension.
+- Uses `.sweetpad/` inside the workspace for temporary files
 
 ## License
 
-This extension is licensed under the [MIT License](./LICENSE.md).
+This project is licensed under the [MIT License](./LICENSE.md).
