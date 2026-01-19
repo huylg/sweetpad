@@ -1,4 +1,4 @@
-# SweetPad CLI (iOS/Swift development) 
+# SweetPad CLI (iOS/Swift development)
 
 SweetPad CLI is a fork of [sweetpad-dev/sweetpad](https://github.com/sweetpad-dev/sweetpad). This fork extracts the
 standalone CLI for building, running, and managing iOS/Swift projects from the command line.
@@ -6,7 +6,7 @@ standalone CLI for building, running, and managing iOS/Swift projects from the c
 SweetPad integrates open-source tools such as **swift-format**, **swiftlint**, **xcodebuild**, **xcrun**,
 **xcode-build-server**, **sourcekit-lsp** to provide a complete iOS development workflow.
 
-##  Autocomplete
+## Autocomplete
 
 SweetPad CLI provides interactive autocomplete for workspace, scheme, configuration, and destination selection using
 `fzf`. When configuration is missing or incomplete, the CLI will prompt you to select the appropriate options
@@ -18,6 +18,10 @@ automatically.
 - Interactive selection with fuzzy search powered by `fzf`
 - Remembers your selections across sessions for faster workflows
 - Easy to get started with any iOS project
+
+## Demo
+
+<video src="demo/demo.mov" width="600" controls></video>
 
 ## CLI Installation
 
